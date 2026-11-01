@@ -1378,7 +1378,7 @@ dependencies = [
 [[package]]
 name = "nyx-accounts-service"
 version = "0.1.0"
-source = "git+https://github.com/design-nexus/nyx-accounts.git?rev=ecbe31cbfe6688dd5b3d7803c58e433715427c57#ecbe31cbfe6688dd5b3d7803c58e433715427c57"
+source = "git+https://github.com/design-nexus/nyx-accounts.git?rev=5a0ed8fbe022a6953aba856979478716669fa3f1#5a0ed8fbe022a6953aba856979478716669fa3f1"
 dependencies = [
  "anyhow",
  "futures-util",
@@ -1413,7 +1413,7 @@ dependencies = [
 [[package]]
 name = "nyx-icalglib-sys"
 version = "0.1.0"
-source = "git+https://github.com/design-nexus/nyx-core.git?rev=1fa444e8c427f8d2f4b6fd6d1ace1c5298e4d623#1fa444e8c427f8d2f4b6fd6d1ace1c5298e4d623"
+source = "git+https://github.com/design-nexus/nyx-core.git?rev=f972d4e21f087721c1e5b5af25acc85cf9df5e9c#f972d4e21f087721c1e5b5af25acc85cf9df5e9c"
 dependencies = [
  "gio-sys",
  "glib-sys",
@@ -1425,7 +1425,7 @@ dependencies = [
 [[package]]
 name = "nyx-pim"
 version = "0.1.0"
-source = "git+https://github.com/design-nexus/nyx-core.git?rev=1fa444e8c427f8d2f4b6fd6d1ace1c5298e4d623#1fa444e8c427f8d2f4b6fd6d1ace1c5298e4d623"
+source = "git+https://github.com/design-nexus/nyx-core.git?rev=f972d4e21f087721c1e5b5af25acc85cf9df5e9c#f972d4e21f087721c1e5b5af25acc85cf9df5e9c"
 dependencies = [
  "chrono",
  "chrono-tz",
