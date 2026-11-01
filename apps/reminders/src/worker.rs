@@ -158,7 +158,7 @@ fn connect() {
             let watch = registry.watch(schedule_lists);
             let accounts = nyx_accounts::Client::connect().ok();
             if let Some(client) = &accounts {
-                client.watch(schedule_lists);
+                client.watch(sync_accounts);
             }
             STATE.with(|s| {
                 let mut s = s.borrow_mut();
@@ -169,14 +169,10 @@ fn connect() {
             load();
             send_unsupported();
             poll_online();
+            after(std::time::Duration::from_millis(250),sync_accounts);
         }
         Err(err) => {
-            let installed = std::path::Path::new("/usr/lib/evolution-source-registry").exists();
-            let text = if installed {
-                format!("Task data isn't answering ({err}). Trying again…")
-            } else {
-                "Install evolution-data-server to see your task lists.".to_string()
-            };
+            let text=format!("Native data could not be opened ({err}). Your existing data has been retained. Trying again…");
             send(Update::Unavailable(text));
             after(std::time::Duration::from_secs(10), connect);
         }
@@ -201,31 +197,12 @@ fn schedule_lists() {
     });
 }
 
-/// Microsoft accounts (GOA `ms_graph`, `exchange`) need evolution-ews's EDS
-/// backends, which plain evolution-data-server doesn't have.
-fn send_unsupported() {
-    let installed = |name: &str| {
-        ["/usr/lib", "/usr/lib64", "/usr/local/lib"]
-            .iter()
-            .any(|dir| std::path::Path::new(&format!("{dir}/evolution-data-server/calendar-backends/{name}")).exists())
-    };
-    let mut missing = Vec::new();
-    STATE.with(|s| {
-        let s = s.borrow();
-        let Some(client) = &s.accounts else { return };
-        for account in client.list().unwrap_or_default() {
-            let backend = match account.provider_type.as_str() {
-                "ms_graph" => "libecalbackendmicrosoft365.so",
-                "exchange" => "libecalbackendews.so",
-                _ => continue,
-            };
-            if !installed(backend) {
-                missing.push(account.label().to_string());
-            }
-        }
-    });
-    send(Update::Unsupported(missing));
+/// Refresh native accounts independently; cached data is shown first.
+fn sync_accounts(){
+    STATE.with(|state|{let state=state.borrow();if let Some(registry)=&state.registry{let _=registry.refresh_accounts(nyx_accounts::Service::Tasks);}});
+    schedule_lists();
 }
+fn send_unsupported() { send(Update::Unsupported(Vec::new())); }
 
 fn schedule_tasks() {
     if PENDING_TASKS.with(|p| p.replace(true)) {
@@ -261,7 +238,7 @@ fn list_infos(state: &State) -> Vec<ListInfo> {
         .accounts
         .as_ref()
         .and_then(|c| c.list().ok())
-        .map(|list| list.into_iter().filter(|a| a.attention_needed).map(|a| a.id).collect())
+        .map(|list| list.into_iter().filter(|a| a.status == "needs_sign_in").map(|a| a.id).collect())
         .unwrap_or_default();
     registry
         .sources(Kind::TaskList)

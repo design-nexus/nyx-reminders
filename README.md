@@ -1,6 +1,12 @@
+> Development branch: Online Accounts now uses the isolated native preview.
+> Runtime EDS/EWS dependencies have been replaced by `nyx-pim` and libical.
+> Existing EDS data is retained and can be explicitly exported/imported with
+> `nyx-pim-migrate`. Provider and migration limitations are tracked in
+> the sibling `nyx-accounts/docs/IMPLEMENTATION.md`; this branch is not merge-ready.
+
 # Reminders
 
-Your task lists from Google Tasks, Microsoft To Do, Nextcloud, Fastmail, iCloud and this
+Your task lists from Google Tasks, Microsoft To Do, Nextcloud, compatible CalDAV servers and this
 computer, in one place, for Omarchy. Part of the [Nyx](https://github.com/design-nexus/nyx) apps.
 
 - Today, Scheduled, Flagged, All and Completed across every list
@@ -12,11 +18,10 @@ computer, in one place, for Omarchy. Part of the [Nyx](https://github.com/design
 - Works offline from the saved copy and catches up when you're back online
 - Follows your Omarchy theme; works from the keyboard and tiled at half-screen
 
-Accounts are added in **Settings → Online Accounts**. Tasks are kept by Evolution Data
-Server; each list keeps what its service supports (Google Tasks has dates but no times,
-alerts, repeats or priority; Microsoft To Do has dates but no times or alerts). Microsoft 365
-and Outlook.com lists need the `evolution-ews` package, or [`evolution-ews-backends`](https://github.com/design-nexus/nyx-core/tree/main/packaging/evolution-ews-backends),
-which is the same without the Evolution app.
+Accounts are added in **Settings → Online Accounts**. This feature branch uses
+native authentication and a separate SQLite task store. Provider capabilities vary:
+Google Tasks has date-only deadlines without reminders or recurrence; personal
+Microsoft accounts use Graph To Do. Existing EDS data remains untouched.
 
 ## Install
 

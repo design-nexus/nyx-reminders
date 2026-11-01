@@ -766,7 +766,7 @@ fn rebuild_banners() {
     for account in &u.unsupported {
         banners.append(&widgets::banner(
             &format!(
-                "<b>{}</b>: its task lists need the Microsoft 365 backends for Evolution Data Server (the evolution-ews-backends or evolution-ews package).",
+                "<b>{}</b>: its task lists are unavailable. Check Online Accounts and refresh.",
                 glib::markup_escape_text(account)
             ),
             true,

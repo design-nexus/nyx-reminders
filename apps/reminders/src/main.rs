@@ -27,6 +27,13 @@ const USAGE: &str = "Usage: nyx-reminders [OPTIONS]\n\
 /// Starts the alerts service if it's installed and not running (the installer
 /// enables it for login without starting it).
 fn start_alerts() {
+    if std::env::var_os("NYX_ACCOUNTS_PREVIEW").is_some() {
+        if let Ok(exe) = std::env::current_exe() {
+            let _ = std::process::Command::new(exe.with_file_name("nyx-remindersd"))
+                .stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn();
+        }
+        return;
+    }
     if std::env::var_os("REMINDERS_SNAPSHOT").is_some() {
         return;
     }
