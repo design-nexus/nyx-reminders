@@ -22,7 +22,7 @@ pub struct Notifier {
 
 impl Notifier {
     pub fn new() -> Self {
-        let conn = gio::bus_get_sync(gio::BusType::Session, gio::Cancellable::NONE).ok();
+        let conn = notification_bus();
         let shown: Rc<RefCell<HashMap<u32, Reminder>>> = Rc::default();
         let mut subscriptions = Vec::new();
         if let Some(conn) = &conn {
@@ -164,4 +164,16 @@ pub fn other_notifier_running() -> bool {
     entries.flatten().any(|entry| {
         std::fs::read_to_string(entry.path().join("comm")).is_ok_and(|comm| comm.trim().starts_with("evolution-alarm"))
     })
+}
+
+// Preview engine traffic stays private; desktop notifications use the original bus.
+fn notification_bus() -> Option<gio::DBusConnection> {
+    match std::env::var("NYX_ACCOUNTS_SECRET_BUS_ADDRESS") {
+        Ok(address) if address.starts_with("unix:") => gio::DBusConnection::for_address_sync(
+            &address, gio::DBusConnectionFlags::AUTHENTICATION_CLIENT | gio::DBusConnectionFlags::MESSAGE_BUS_CONNECTION,
+            None::<&gio::DBusAuthObserver>, gio::Cancellable::NONE,
+        ).ok(),
+        Ok(_) => None,
+        Err(_) => gio::bus_get_sync(gio::BusType::Session, gio::Cancellable::NONE).ok(),
+    }
 }
