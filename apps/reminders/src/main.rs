@@ -78,11 +78,26 @@ fn main() -> glib::ExitCode {
         // SAFETY: still single-threaded; nothing else reads the environment yet.
         unsafe { std::env::set_var("GSK_RENDERER", "ngl") };
     }
-    let app = gtk::Application::builder().application_id(&app_id).flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE).build();
-    app.connect_startup(|app| {
+    // D-Bus starts Reminders with --gapplication-service for a call from nyx, Glimpse or
+    // Nyx Assistant: no window, no alerts (the running copy or nyx-remindersd has them),
+    // and it quits once idle. GLib won't parse the flag for apps that handle their own
+    // command line.
+    let mut args = args;
+    let service = args.iter().any(|a| a == "--gapplication-service");
+    args.retain(|a| a != "--gapplication-service");
+    let mut flags = gio::ApplicationFlags::HANDLES_COMMAND_LINE;
+    if service {
+        flags |= gio::ApplicationFlags::IS_SERVICE;
+    }
+    let app = gtk::Application::builder().application_id(&app_id).flags(flags).build();
+    app.connect_startup(move |app| {
         theme::install();
         control::serve(app);
-        start_alerts();
+        if service {
+            app.set_inactivity_timeout(10_000);
+        } else {
+            start_alerts();
+        }
     });
     app.connect_command_line(|app, cl| {
         let argv: Vec<String> = cl.arguments().iter().map(|a| a.to_string_lossy().to_string()).collect();
@@ -102,5 +117,5 @@ fn main() -> glib::ExitCode {
         glib::ExitCode::SUCCESS
     });
     app.connect_shutdown(|_| prefs::flush());
-    app.run()
+    app.run_with_args(&args)
 }

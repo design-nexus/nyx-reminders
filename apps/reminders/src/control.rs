@@ -30,7 +30,8 @@ pub fn tools() -> Value {
 }
 
 /// API 2: the tools with what they risk and how they're typed, the app, and the
-/// `today` topic Glimpse's Reminders panel shows. Reminders answers while it runs.
+/// `today` topic Glimpse's Reminders panel shows. D-Bus starts Reminders without its
+/// window for a call.
 pub fn description(app_id: &str) -> Value {
     let meta = [
         ("reminders.lists", json!({"risk": "read_only", "result": "object"})),
@@ -56,7 +57,7 @@ pub fn description(app_id: &str) -> Value {
     json!({
         "tools": list,
         "nyx": {"api": 2, "app": app_id, "name": "Reminders", "icon": crate::APP_ID, "namespaces": ["reminders"], "aliases": ["todo", "tasks"],
-                "bus_name": app_id, "activation": "running", "default": "reminders.search", "open": {"action": "reminders.open"},
+                "bus_name": app_id, "activation": "dbus", "default": "reminders.search", "open": {"action": "reminders.open"},
                 "topics": [{"name": "today", "sensitive": true}],
                 "panel": {"id": "reminders", "topics": ["today"], "size": {"min": [420, 320], "preferred": [500, 400]}}}
     })
@@ -78,9 +79,11 @@ pub fn serve(app: &gtk::Application) {
             window::present(&window_app, None);
             return answer(Ok(Value::Null));
         }
-        handle(&request.action, request.arguments, Box::new(move |r| {
-            answer(r.map_err(|e| nyx_actions::Error::new(nyx_actions::ErrorKind::Failed, e)));
-        }));
+        window::when_loaded(move || {
+            handle(&request.action, request.arguments, Box::new(move |r| {
+                answer(r.map_err(|e| nyx_actions::Error::new(nyx_actions::ErrorKind::Failed, e)));
+            }));
+        });
     }) else {
         return;
     };
@@ -107,9 +110,11 @@ pub fn publish() {
     if !service.watched("today") {
         return;
     }
-    handle("reminders.today", json!({}), Box::new(move |r| {
-        service.publish("today", r.unwrap_or_else(|e| json!({"error": e})));
-    }));
+    window::when_loaded(move || {
+        handle("reminders.today", json!({}), Box::new(move |r| {
+            service.publish("today", r.unwrap_or_else(|e| json!({"error": e})));
+        }));
+    });
 }
 
 pub fn handle(name: &str, args: Value, reply: Reply) {

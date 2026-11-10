@@ -111,12 +111,36 @@ pub fn overlay() -> Option<gtk::Overlay> {
     ui().map(|u| u.borrow().overlay.clone())
 }
 
+thread_local! {
+    /// The lists and reminders as the worker last sent them, window or not (Reminders
+    /// started by D-Bus for a call); whether the first reminders came; calls waiting.
+    static KNOWN: RefCell<(Vec<ListInfo>, Vec<Task>, bool)> = const { RefCell::new((Vec::new(), Vec::new(), false)) };
+    static WAITING: RefCell<Vec<Box<dyn FnOnce()>>> = const { RefCell::new(Vec::new()) };
+}
+
 pub fn lists() -> Vec<ListInfo> {
-    ui().map(|u| u.borrow().lists.clone()).unwrap_or_default()
+    KNOWN.with(|k| k.borrow().0.clone())
 }
 
 pub fn tasks() -> Vec<Task> {
-    ui().map(|u| u.borrow().tasks.clone()).unwrap_or_default()
+    KNOWN.with(|k| k.borrow().1.clone())
+}
+
+/// Run `f` once the worker has sent the reminders: at once when it has, else when it
+/// does (starting it without a window), or after 8 s whatever happened.
+pub fn when_loaded(f: impl FnOnce() + 'static) {
+    if KNOWN.with(|k| k.borrow().2) {
+        return f();
+    }
+    WAITING.with(|w| w.borrow_mut().push(Box::new(f)));
+    worker::start();
+    glib::timeout_add_local_once(std::time::Duration::from_secs(8), run_waiting);
+}
+
+fn run_waiting() {
+    for f in WAITING.with(|w| std::mem::take(&mut *w.borrow_mut())) {
+        f();
+    }
 }
 
 pub fn meta_of(key: &Key) -> Meta {
@@ -205,6 +229,23 @@ fn snapshot_and_quit(app: &gtk::Application, out: std::path::PathBuf) {
 
 /// Applies what the worker found.
 pub fn apply(update: Update) {
+    match &update {
+        Update::Lists(lists) => KNOWN.with(|k| k.borrow_mut().0 = lists.clone()),
+        Update::Tasks { tasks, .. } => {
+            KNOWN.with(|k| {
+                let mut k = k.borrow_mut();
+                k.1 = tasks.clone();
+                k.2 = true;
+            });
+            run_waiting();
+            crate::control::publish();
+        }
+        Update::Unavailable(_) => {
+            KNOWN.with(|k| k.borrow_mut().2 = true);
+            run_waiting();
+        }
+        _ => {}
+    }
     let Some(ui) = ui() else { return };
     match update {
         Update::Unavailable(text) => {
@@ -235,8 +276,6 @@ pub fn apply(update: Update) {
             }
             u.meta = u.sidecar.as_ref().and_then(|s| s.all().ok()).unwrap_or_default();
             u.tasks = tasks;
-            drop(u);
-            crate::control::publish();
         }
     }
     redraw();
@@ -595,8 +634,16 @@ pub fn set_flag(task: &Task, flagged: bool) {
 
 /// Records where a task came from (a Mail message).
 pub fn set_source(list: &str, uid: &str, source: &str) {
-    let Some(ui) = ui() else { return };
     let key = (list.to_string(), uid.to_string());
+    let Some(ui) = ui() else {
+        // No window: straight to the sidecar the window reads.
+        if let Ok(sidecar) = Sidecar::open(&nyx_core::paths::data_dir().join("reminders.sqlite")) {
+            let mut meta = sidecar.get(&key).ok().unwrap_or_default();
+            meta.source = Some(source.to_string());
+            let _ = sidecar.set(&key, &meta);
+        }
+        return;
+    };
     let mut meta = ui.borrow().meta.get(&key).cloned().unwrap_or_default();
     meta.source = Some(source.to_string());
     if let Some(sidecar) = &ui.borrow().sidecar {
