@@ -20,8 +20,8 @@ nyx-core = { git = "https://github.com/design-nexus/nyx-core.git", rev = "47c5e0
 nyx-actions = { git = "https://github.com/design-nexus/nyx-core.git", rev = "47c5e0f328b4042df4c08fc317510644a64d1124", default-features = false }
 nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "47c5e0f328b4042df4c08fc317510644a64d1124" }
 nyx-reminders-core = { path = "../../crates/nyx-reminders-core" }
-nyx-theme = { git = "https://github.com/design-nexus/nyx-design.git", rev = "06f65ab2b8d076f5fd92b3b5e6c047e638b98890" }
-nyx-ui = { git = "https://github.com/design-nexus/nyx-design.git", rev = "06f65ab2b8d076f5fd92b3b5e6c047e638b98890" }
+nyx-theme = { git = "https://github.com/design-nexus/nyx-design.git", rev = "d168cbfa57ee229df327f0c85abe5f4b75201b99" }
+nyx-ui = { git = "https://github.com/design-nexus/nyx-design.git", rev = "d168cbfa57ee229df327f0c85abe5f4b75201b99" }
 nyx-when = { git = "https://github.com/design-nexus/nyx-core.git", rev = "47c5e0f328b4042df4c08fc317510644a64d1124" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
