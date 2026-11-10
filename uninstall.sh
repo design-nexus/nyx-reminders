@@ -80,6 +80,7 @@ for a in "${apps[@]}"; do
   for b in $bins; do pkill -x "$b" 2>/dev/null || true; rm -f "$bin/$b"; done
   for id in $ids; do
     rm -f "$share/applications/io.github.design_nexus.nyx.$id.desktop" "$share/icons/hicolor/scalable/apps/io.github.design_nexus.nyx.$id.svg"
+    rm -f "$share/nyx/actions/io.github.design_nexus.nyx.$id.json" "$share/dbus-1/services/io.github.design_nexus.nyx.$id.service"
   done
   [[ $a == office ]] && rm -f "$share/mime/packages/nyx-office.xml" && update-mime-database "$share/mime" 2>/dev/null || true
   [[ $a == fonts && $purge == true ]] && rm -rf "$share/fonts/nyx-fonts"

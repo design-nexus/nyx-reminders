@@ -29,6 +29,89 @@ pub fn tools() -> Value {
     ])
 }
 
+/// API 2: the tools with what they risk and how they're typed, the app, and the
+/// `today` topic Glimpse's Reminders panel shows. Reminders answers while it runs.
+pub fn description(app_id: &str) -> Value {
+    let meta = [
+        ("reminders.lists", json!({"risk": "read_only", "result": "object"})),
+        ("reminders.today", json!({"risk": "read_only", "aliases": ["due", "overdue"], "result": "object"})),
+        ("reminders.list", json!({"risk": "read_only", "aliases": ["all"], "result": "object"})),
+        ("reminders.search", json!({"risk": "read_only", "aliases": ["find"], "positional": ["query"], "result": "object"})),
+        ("reminders.create", json!({"risk": "writes", "aliases": ["add", "new"], "positional": ["title"], "result": "object"})),
+        ("reminders.complete", json!({"risk": "writes", "aliases": ["done"], "result": "object"})),
+        ("reminders.edit", json!({"risk": "writes", "result": "object"})),
+        ("reminders.delete", json!({"risk": "destructive", "result": "object"})),
+    ];
+    let mut list = tools();
+    for t in list.as_array_mut().into_iter().flatten() {
+        if let Some((_, m)) = meta.iter().find(|(n, _)| t["name"] == *n) {
+            t["x-nyx"] = m.clone();
+        }
+    }
+    if let Some(a) = list.as_array_mut() {
+        a.push(json!({"name": "reminders.open", "description": "Open Reminders' window.",
+            "inputSchema": {"type": "object", "properties": {}, "additionalProperties": false},
+            "annotations": {"title": "Open Reminders"}, "x-nyx": {"risk": "writes", "confirmation": "never", "result": "none"}}));
+    }
+    json!({
+        "tools": list,
+        "nyx": {"api": 2, "app": app_id, "name": "Reminders", "icon": crate::APP_ID, "namespaces": ["reminders"], "aliases": ["todo", "tasks"],
+                "bus_name": app_id, "activation": "running", "default": "reminders.search", "open": {"action": "reminders.open"},
+                "topics": [{"name": "today", "sensitive": true}],
+                "panel": {"id": "reminders", "topics": ["today"], "size": {"min": [420, 320], "preferred": [500, 400]}}}
+    })
+}
+
+thread_local! {
+    static SERVICE: std::cell::RefCell<Option<nyx_core::control::Service>> = const { std::cell::RefCell::new(None) };
+    static TIMER: std::cell::RefCell<Option<gtk::glib::SourceId>> = const { std::cell::RefCell::new(None) };
+}
+
+/// Register the interface (from `connect_startup`); `today` is read again every
+/// minute only while something watches it, and whenever the lists load.
+pub fn serve(app: &gtk::Application) {
+    use gtk::prelude::*;
+    let id = app.application_id().map(|s| s.to_string()).unwrap_or_else(|| crate::APP_ID.to_string());
+    let window_app = app.clone();
+    let Some(service) = nyx_core::control::serve_with(app, description(&id), move |request, answer| {
+        if request.action == "reminders.open" {
+            window::present(&window_app, None);
+            return answer(Ok(Value::Null));
+        }
+        handle(&request.action, request.arguments, Box::new(move |r| {
+            answer(r.map_err(|e| nyx_actions::Error::new(nyx_actions::ErrorKind::Failed, e)));
+        }));
+    }) else {
+        return;
+    };
+    service.on_watch(|_, on| {
+        TIMER.with(|t| {
+            if let Some(id) = t.borrow_mut().take() {
+                id.remove();
+            }
+            if on {
+                publish();
+                *t.borrow_mut() = Some(gtk::glib::timeout_add_seconds_local(60, || {
+                    publish();
+                    gtk::glib::ControlFlow::Continue
+                }));
+            }
+        });
+    });
+    SERVICE.with(|s| *s.borrow_mut() = Some(service));
+}
+
+/// Send `today` to its watchers (none: nothing to do).
+pub fn publish() {
+    let Some(service) = SERVICE.with(|s| s.borrow().clone()) else { return };
+    if !service.watched("today") {
+        return;
+    }
+    handle("reminders.today", json!({}), Box::new(move |r| {
+        service.publish("today", r.unwrap_or_else(|e| json!({"error": e})));
+    }));
+}
+
 pub fn handle(name: &str, args: Value, reply: Reply) {
     let tasks = window::tasks();
     let lists = window::lists();
@@ -183,6 +266,14 @@ fn due_arg(text: &str) -> Option<Due> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_description_is_api_2() {
+        let d = nyx_actions::Description::from_value(&description(crate::APP_ID), None).unwrap();
+        assert!(d.action("reminders.delete").unwrap().asks());
+        assert!(!d.action("reminders.create").unwrap().asks());
+        assert_eq!(d.app.panel.as_ref().map(|p| p.id.as_str()), Some("reminders"));
+    }
 
     #[test]
     fn reads_due_dates() {

@@ -66,6 +66,9 @@ fn main() -> glib::ExitCode {
         print!("{USAGE}");
         return glib::ExitCode::SUCCESS;
     }
+    // A test copy runs under its own ID, beside the real one.
+    let app_id = std::env::var("NYX_REMINDERS_APP_ID").unwrap_or_else(|_| APP_ID.to_string());
+    nyx_core::control::describe_if_asked(&control::description(&app_id));
     // The control tools as JSON, without a window (Nyx Assistant's abilities).
     if args.iter().any(|a| a == "--describe") {
         println!("{}", control::tools());
@@ -75,10 +78,10 @@ fn main() -> glib::ExitCode {
         // SAFETY: still single-threaded; nothing else reads the environment yet.
         unsafe { std::env::set_var("GSK_RENDERER", "ngl") };
     }
-    let app = gtk::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE).build();
+    let app = gtk::Application::builder().application_id(&app_id).flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE).build();
     app.connect_startup(|app| {
         theme::install();
-        nyx_core::control::serve_async(app, control::tools(), control::handle);
+        control::serve(app);
         start_alerts();
     });
     app.connect_command_line(|app, cl| {

@@ -235,6 +235,8 @@ pub fn apply(update: Update) {
             }
             u.meta = u.sidecar.as_ref().and_then(|s| s.all().ok()).unwrap_or_default();
             u.tasks = tasks;
+            drop(u);
+            crate::control::publish();
         }
     }
     redraw();

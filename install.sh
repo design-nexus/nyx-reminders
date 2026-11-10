@@ -23,8 +23,9 @@ die() { printf '\033[31m==>\033[0m %s\n' "$*" >&2; exit 1; }
 # ---------- What each app is ----------
 # dir: folder under apps/   pkg: cargo package   bins: programs it installs
 # deps: Arch packages it needs   old_*: what the app was called before Nyx
+# actions: the program that prints the app's action manifest (--describe-actions)
 app_info() {
-  dir=$1 pkg="nyx-$1" bins="nyx-$1" deps="" ids="" old_bins="" old_desktops="" old_icons="" defaults=false
+  dir=$1 pkg="nyx-$1" bins="nyx-$1" deps="" ids="" old_bins="" old_desktops="" old_icons="" defaults=false actions=""
   case $1 in
     settings) ids="Settings" old_bins="settings settings-helper"; bins="nyx-settings nyx-settings-helper nyx-goa-helper" ;;
     glimpse) ids="Glimpse" bins="nyx-glimpse nyx-glimpsed nyx-glimpse-settings" deps="bubblewrap" ;;
@@ -43,7 +44,7 @@ app_info() {
     fonts) ids="Fonts" old_bins="fonts" deps="fontconfig pango tar xz" ;;
     archive) ids="Archive" old_bins="archive" deps="7zip" defaults=true ;;
     weather) ids="Weather" ;;
-    reminders) ids="Reminders" deps="libical" bins="nyx-reminders nyx-remindersd" ;;
+    reminders) ids="Reminders" deps="libical" bins="nyx-reminders nyx-remindersd" actions="nyx-reminders" ;;
     capture) ids="Capture" deps="grim wl-clipboard tesseract gtk4-layer-shell tesseract-data-eng" bins="nyx-capture nyx-capture-glimpse" ;;
     pulse) ids="Pulse" bins="nyx-pulse nyx-pulse-glimpse" deps="mpv ffmpeg tlottie libsecret clang unzip gstreamer gst-plugins-base gst-plugins-good gst-plugin-pipewire libcanberra geoclue webkit2gtk-4.1 python-gobject libfido2" ;;
     office)
@@ -223,6 +224,21 @@ for a in "${apps[@]}"; do
   done
   for f in "$d"/data/io.github.design_nexus.nyx.*.desktop; do install -m 644 "$f" "$desk/"; done
   for id in $ids; do install -m 644 "$src/crates/nyx-icons/apps/io.github.design_nexus.nyx.$id.svg" "$icons/"; done
+  # What the app does for nyx APP …, Glimpse and the Assistant (its manifest), and the
+  # D-Bus service that starts it without a window for a call.
+  if [[ -n $actions && -x $bin/$actions ]]; then
+    mkdir -p "$share/nyx/actions" "$share/dbus-1/services"
+    manifest=$(mktemp)
+    if timeout 10 "$bin/$actions" --describe-actions >"$manifest" 2>/dev/null; then
+      app_id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["nyx"]["app"])' "$manifest")
+      install -m 644 "$manifest" "$share/nyx/actions/$app_id.json"
+      if python3 -c 'import json,sys; n=json.load(open(sys.argv[1]))["nyx"]; sys.exit(0 if n["activation"] == "dbus" and n["bus_name"] == n["app"] else 1)' "$manifest"; then
+        printf '[D-BUS Service]\nName=%s\nExec=%s --gapplication-service\n' "$app_id" "$bin/$actions" >"$share/dbus-1/services/$app_id.service"
+      fi
+    fi
+    rm -f "$manifest"
+    busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus ReloadConfig >/dev/null 2>&1 || true
+  fi
   if [[ $a == news && -f ${CARGO_TARGET_DIR:-$src/target}/release/nyx-news-glimpse ]]; then
     plug="$share/nyx-news/glimpse"
     mkdir -p "$plug"
