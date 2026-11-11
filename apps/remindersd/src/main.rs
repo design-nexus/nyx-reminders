@@ -23,10 +23,12 @@ pub fn snooze_minutes() -> i64 {
         .filter(|n| [5, 10, 15, 30].contains(n)).unwrap_or(10)
 }
 
-const USAGE: &str = "Usage: nyx-remindersd [--write-tasks]\n\
+const USAGE: &str = "Usage: nyx-remindersd [--write-tasks | --complete LIST UID]\n\
 \n\
   Shows reminder alerts as notifications and keeps tasks.sqlite current.\n\
-  --write-tasks   write tasks.sqlite once and exit\n";
+  --write-tasks          write tasks.sqlite once and exit\n\
+  --complete LIST UID    complete one task (as tasks.sqlite names it), write\n\
+                         tasks.sqlite and exit (the bar's calendar ticks with it)\n";
 
 #[derive(Default)]
 struct State {
@@ -60,6 +62,23 @@ fn main() {
                 eprintln!("nyx-remindersd: {e}");
                 std::process::exit(1);
             }
+        }
+        return;
+    }
+
+    if let Some(i) = args.iter().position(|a| a == "--complete") {
+        let (Some(list), Some(uid)) = (args.get(i + 1), args.get(i + 2)) else {
+            eprint!("{USAGE}");
+            std::process::exit(2);
+        };
+        let result = Registry::connect().map_err(|e| e.to_string()).and_then(|registry| {
+            STATE.with(|s| s.borrow_mut().registry = Some(registry));
+            try_complete(list, uid)?;
+            write_tasks()
+        });
+        if let Err(e) = result {
+            eprintln!("nyx-remindersd: couldn't complete the task: {e}");
+            std::process::exit(1);
         }
         return;
     }
@@ -135,7 +154,13 @@ pub fn snooze_until() -> i64 {
 
 /// Completes a task from a notification.
 pub fn complete(list: &str, uid: &str) {
-    let result = STATE.with(|s| {
+    if let Err(e) = try_complete(list, uid) {
+        eprintln!("nyx-remindersd: couldn't complete the task: {e}");
+    }
+}
+
+fn try_complete(list: &str, uid: &str) -> Result<(), String> {
+    STATE.with(|s| {
         let mut s = s.borrow_mut();
         let state = &mut *s;
         let Some(registry) = &state.registry else { return Err("Task data isn't available.".to_string()) };
@@ -144,10 +169,7 @@ pub fn complete(list: &str, uid: &str) {
             state.open.insert(list.to_string(), open);
         }
         state.open[list].complete(uid).map_err(|e| e.to_string())
-    });
-    if let Err(e) = result {
-        eprintln!("nyx-remindersd: couldn't complete the task: {e}");
-    }
+    })
 }
 
 fn schedule() {
