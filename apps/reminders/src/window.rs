@@ -912,9 +912,11 @@ fn list_button(list: &ListInfo, count: usize, active: bool) -> gtk::Button {
 }
 
 /// A group heading; `folded` is set for an account's, which folds its lists away.
-fn group_label(text: &str, first: bool, add: bool, folded: Option<bool>) -> gtk::Widget {
+/// `section` colours it and the line under it.
+fn group_label(text: &str, first: bool, add: bool, folded: Option<bool>, section: &str) -> gtk::Widget {
     let label = widgets::label(&text.to_uppercase(), "nav-group");
     label.add_css_class("compact-hide");
+    nyx_ui::sidebar::set_section(&label, section);
     if first {
         label.add_css_class("first");
     }
@@ -973,7 +975,7 @@ pub(crate) fn rebuild_nav() {
         let u = ui.borrow();
         (u.page.clone(), u.lists.clone(), u.tasks.clone())
     };
-    list_box.append(&group_label("Smart lists", true, false, None));
+    list_box.append(&group_label("Smart lists", true, false, None, nyx_ui::sidebar::ACCENT_SECTION));
     for (smart, icon, key) in [
         (Smart::Today, "x-office-calendar-symbolic", "1"),
         (Smart::Scheduled, "alarm-symbolic", "2"),
@@ -999,7 +1001,8 @@ pub(crate) fn rebuild_nav() {
     let folded_groups = prefs::get().collapsed_groups;
     for (i, (label, items)) in groups.iter().enumerate() {
         let folded = folded_groups.contains(label);
-        list_box.append(&group_label(label, false, i == 0, Some(folded)));
+        // Each account in the next swatch, in the accounts' order.
+        list_box.append(&group_label(label, false, i == 0, Some(folded), &nyx_ui::sidebar::rotating_section(i)));
         if folded {
             continue;
         }
