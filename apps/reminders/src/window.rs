@@ -1155,8 +1155,11 @@ fn build(app: &gtk::Application) {
     detail_scroll.add_css_class("inspector");
     detail_scroll.set_hexpand(false);
     detail_scroll.set_visible(false);
+    let line = nyx_ui::frame::pane_line(gtk::Orientation::Vertical);
+    detail_scroll.bind_property("visible", &line, "visible").sync_create().build();
     let split = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     split.append(&list_scroll);
+    split.append(&line);
     split.append(&detail_scroll);
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -1165,25 +1168,16 @@ fn build(app: &gtk::Application) {
     content.append(&banners);
     content.append(&split);
 
-    let body = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    body.set_vexpand(true);
-    body.append(&nav);
-    body.append(&content);
-
     // The header: the app with the page as its subtitle, quick add, and Settings.
     let header = nyx_ui::chrome::app_header(&window, "checkbox-checked-symbolic", "Reminders");
     header.center.append(&quick);
     header.end.append(&nyx_ui::chrome::settings_button(settings_dialog::open));
     let title = header.subtitle.clone();
 
-    let frame = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    frame.add_css_class("window-frame");
-    frame.append(&header.root);
-    frame.append(&body);
-
-    let overlay = gtk::Overlay::new();
-    overlay.set_child(Some(&frame));
-    window.set_child(Some(&overlay));
+    let frame = nyx_ui::frame::AppFrame::new(&header.root);
+    frame.set_sidebar(&nav);
+    frame.set_page(&content);
+    let overlay = frame.install(&window);
     install_keys(&window, &search, &quick);
 
     let sidecar = match Sidecar::open(&nyx_core::paths::data_dir().join("reminders.sqlite")) {
