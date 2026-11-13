@@ -149,6 +149,81 @@ pub fn delete(task: &Task, subtasks: Vec<String>) {
     );
 }
 
+/// What `task` is, as a draft for another list: only the parts `caps` can keep.
+fn draft_for(task: &Task, caps: Caps, parent: Option<String>) -> Draft {
+    let due = task.due.map(|d| match d {
+        Due::At(t) if caps.date_only => Due::Day(t.date()),
+        other => other,
+    });
+    Draft {
+        summary: Some(task.title.clone()),
+        description: Some(task.notes.clone()).filter(|n| !n.is_empty()),
+        due: due.map(|d| Some(d.when())),
+        repeat: task.rule.clone().filter(|_| caps.repeat).map(Some),
+        priority: task.priority.filter(|_| caps.priority).map(Some),
+        url: task.url.clone().map(Some),
+        categories: Some(task.tags.clone()).filter(|t| !t.is_empty() && caps.tags),
+        alarms: Some(task.alarms.clone()).filter(|a| !a.is_empty() && caps.alerts),
+        parent: parent.map(Some),
+        ..Draft::default()
+    }
+}
+
+/// Moves a reminder (and its subtasks) to another list: made there, then
+/// removed here. Parts the other list can't keep are left behind, and said.
+pub fn move_to(task: &Task, subtasks: Vec<Task>, target: String) {
+    if target == task.list {
+        return;
+    }
+    let (task, caps) = (task.clone(), window::list_caps(&target));
+    let name = window::lists().iter().find(|l| l.uid == target).map(|l| l.name.clone()).unwrap_or_default();
+    let lost: Vec<&str> = [
+        (task.rule.is_some() && !caps.repeat, "repeat"),
+        (task.priority.is_some() && !caps.priority, "priority"),
+        (!task.tags.is_empty() && !caps.tags, "tags"),
+        (matches!(task.due, Some(Due::At(_))) && caps.date_only, "time"),
+    ]
+    .into_iter()
+    .filter_map(|(lost, what)| lost.then_some(what))
+    .collect();
+    worker::ask(
+        move || {
+            let uid = worker::with_list(&target, |l| l.create(&draft_for(&task, caps, None)))?;
+            for sub in &subtasks {
+                worker::with_list(&target, |l| l.create(&draft_for(sub, caps, Some(uid.clone()))))?;
+            }
+            worker::with_list(&task.list, |l| {
+                for s in subtasks.iter().map(|s| &s.uid).chain(std::iter::once(&task.uid)) {
+                    l.remove(s, None, Scope::All)?;
+                }
+                Ok(())
+            })
+        },
+        move |result: Result<(), String>| match result {
+            Ok(()) if lost.is_empty() => window::toast(&format!("Moved to {name}.")),
+            Ok(()) => window::toast(&format!("Moved to {name}, without its {} ({name} can't keep them).", lost.join(" and "))),
+            Err(err) => window::toast(&err),
+        },
+    );
+}
+
+/// "Every week", "Every weekday", "Every 3 months"…: a rule in words.
+pub fn repeat_text(rule: &str) -> String {
+    if let Some((_, l)) = crate::detail::REPEATS.iter().find(|(r, _)| *r == rule) {
+        return l.to_string();
+    }
+    let part = |k: &str| rule.split(';').find_map(|p| p.strip_prefix(&format!("{k}=")).map(str::to_string));
+    let every = part("INTERVAL").and_then(|n| n.parse::<u32>().ok()).unwrap_or(1);
+    let unit = match part("FREQ").as_deref() {
+        Some("DAILY") => "day",
+        Some("WEEKLY") => "week",
+        Some("MONTHLY") => "month",
+        Some("YEARLY") => "year",
+        _ => return "Repeats".into(),
+    };
+    if every == 1 { format!("Every {unit}") } else { format!("Every {every} {unit}s") }
+}
+
 fn restore(list: String, ics: String) {
     worker::ask(
         move || worker::with_list(&list, |l| l.import_all(&ics)),

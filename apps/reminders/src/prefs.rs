@@ -27,6 +27,10 @@ pub struct Prefs {
     pub day_alerts: bool,
     /// Accounts whose lists are folded away in the sidebar (by heading).
     pub collapsed_groups: Vec<String>,
+    /// Today and Scheduled's order within each day: "date" or "priority".
+    pub sort_fixed: String,
+    /// A list's order: "manual" (as dragged), "date" or "priority".
+    pub sort_lists: String,
 }
 
 impl Default for Prefs {
@@ -45,6 +49,8 @@ impl Default for Prefs {
             timed_alert: Some(0),
             day_alerts: true,
             collapsed_groups: Vec::new(),
+            sort_fixed: "date".into(),
+            sort_lists: "manual".into(),
         }
     }
 }

@@ -24,9 +24,10 @@ pub fn task(widget: &gtk::Widget, x: f64, y: f64, task: &Task) {
     let mut out: Vec<MenuEntry> = Vec::new();
     if !read_only {
         let t = task.clone();
-        out.push(keyed(if task.done { "Reopen" } else { "Complete" }, "Space", move || actions::set_done(&t, !t.done)));
+        out.push(keyed(if task.done { "Reopen" } else { "Complete" }, "Space", move || actions::set_done(&t, !t.done)).with_icon("emblem-ok-symbolic"));
         let (t, flagged) = (task.clone(), window::meta_of(&task.key()).flagged);
-        out.push(keyed(if flagged { "Unflag" } else { "Flag" }, "S", move || window::set_flag(&t, !flagged)));
+        out.push(keyed(if flagged { "Unflag" } else { "Flag" }, "S", move || window::set_flag(&t, !flagged)).with_icon("nyx-reminders-flag-symbolic"));
+        out.push(separator());
 
         let today = actions::now().date();
         let monday = today + Duration::days((7 - today.weekday().num_days_from_monday()) as i64);
@@ -44,7 +45,7 @@ pub fn task(widget: &gtk::Widget, x: f64, y: f64, task: &Task) {
             due.push(separator());
             due.push(item("No date", move || actions::save(&t, Draft { due: Some(None), ..Draft::default() })));
         }
-        out.push(sub("Due", due));
+        out.push(sub("Due", due).with_icon("x-office-calendar-symbolic"));
         if caps.priority {
             out.push(sub(
                 "Priority",
@@ -55,7 +56,27 @@ pub fn task(widget: &gtk::Widget, x: f64, y: f64, task: &Task) {
                         item(label, move || actions::save(&t, Draft { priority: Some(value), ..Draft::default() }))
                     })
                     .collect(),
-            ));
+            ).with_icon("emblem-important-symbolic"));
+        }
+        // Another list it can go to (a subtask moves with its reminder).
+        let others: Vec<ListInfo> =
+            window::lists().into_iter().filter(|l| !l.read_only && l.uid != task.list).collect();
+        if task.parent.is_none() && !others.is_empty() {
+            let moves = others
+                .into_iter()
+                .map(|l| {
+                    let t = task.clone();
+                    item(&l.name, move || {
+                        let subs: Vec<Task> = window::tasks()
+                            .into_iter()
+                            .filter(|s| s.parent.as_deref() == Some(t.uid.as_str()) && s.list == t.list)
+                            .collect();
+                        window::select(None);
+                        actions::move_to(&t, subs, l.uid.clone());
+                    })
+                })
+                .collect();
+            out.push(sub("Move to list", moves).with_icon("view-list-symbolic"));
         }
     }
     if let Some(url) = task.url.clone().filter(|u| !u.trim().is_empty()) {
@@ -65,16 +86,19 @@ pub fn task(widget: &gtk::Widget, x: f64, y: f64, task: &Task) {
         }));
     }
     let title = task.title.clone();
-    out.push(item("Copy", move || {
-        if let Some(display) = gtk::gdk::Display::default() {
-            display.clipboard().set_text(&title);
-            window::toast("Copied.");
-        }
-    }));
+    out.push(separator());
+    out.push(
+        keyed("Copy", "Ctrl C", move || {
+            if let Some(display) = gtk::gdk::Display::default() {
+                display.clipboard().set_text(&title);
+                window::toast("Copied.");
+            }
+        })
+        .with_icon("edit-copy-symbolic"),
+    );
     if !read_only {
-        out.push(separator());
         let t = task.clone();
-        out.push(danger("Delete", Some("Delete"), move || {
+        out.push(danger("Delete", Some("Del"), move || {
             let subs: Vec<String> = window::tasks()
                 .iter()
                 .filter(|s| s.parent.as_deref() == Some(t.uid.as_str()) && s.list == t.list)
@@ -82,7 +106,7 @@ pub fn task(widget: &gtk::Widget, x: f64, y: f64, task: &Task) {
                 .collect();
             window::select(None);
             actions::delete(&t, subs);
-        }));
+        }).with_icon("user-trash-symbolic"));
     }
     widgets::popup_menu(widget, x, y, out);
 }

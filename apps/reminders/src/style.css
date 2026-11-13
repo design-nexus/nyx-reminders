@@ -1,27 +1,217 @@
-/* Reminders: only what the shared base.css doesn't already style. */
+/* Reminders on the shared 2.0 base. The look follows nyx-design/mockups/reminders. */
 
 .banners {
-  padding: 12px 16px;
+  padding: 10px 12px 0 12px;
 }
 
-/* What quick add understood, over the list while you type. */
-.quick-box {
-  padding: 8px 24px 0 24px;
+/* ---------- Sidebar ---------- */
+
+.settings-navigation:not(.compact) {
+  min-width: 236px;
 }
 
-.quick-note {
+.smart-tiles {
+  margin: 2px 0 6px;
+}
+
+.smart-tiles flowboxchild {
+  padding: 0;
+}
+
+window.reminders-window button.smart-tile {
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: @theme_card;
+  box-shadow: inset 0 0 0 1px @hairline;
+  min-height: 0;
+}
+
+window.reminders-window button.smart-tile:hover {
+  background: mix(@theme_card, @theme_text, 0.04);
+}
+
+.smart-tile .tile-icon {
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 999px;
+  color: #ffffff;
+}
+
+.smart-tile .tile-icon image {
+  -gtk-icon-size: 14px;
+}
+
+.smart-tile.tile-today .tile-icon { background: @theme_accent; }
+.smart-tile.tile-scheduled .tile-icon { background: @theme_danger; }
+.smart-tile.tile-flagged .tile-icon { background: @theme_warning; }
+.smart-tile.tile-all .tile-icon { background: @theme_text_tertiary; }
+
+window.reminders-window button.smart-tile.active.tile-today { background: alpha(@theme_accent, 0.16); box-shadow: inset 0 0 0 1.5px alpha(@theme_accent, 0.6); }
+window.reminders-window button.smart-tile.active.tile-scheduled { background: alpha(@theme_danger, 0.16); box-shadow: inset 0 0 0 1.5px alpha(@theme_danger, 0.6); }
+window.reminders-window button.smart-tile.active.tile-flagged { background: alpha(@theme_warning, 0.16); box-shadow: inset 0 0 0 1.5px alpha(@theme_warning, 0.6); }
+window.reminders-window button.smart-tile.active.tile-all { background: alpha(@theme_text_tertiary, 0.16); box-shadow: inset 0 0 0 1.5px alpha(@theme_text_tertiary, 0.6); }
+
+.smart-tile .tile-count {
+  font-size: 1.385em;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+
+.smart-tile .tile-name {
   color: @theme_dim_text;
-  font-size: 0.86em;
-  padding-left: 4px;
+  font-size: 0.923em;
+  font-weight: 500;
 }
+
+/* The icon rail: each tile a 36 px square around its disc. */
+.settings-navigation.compact button.smart-tile {
+  padding: 6px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.settings-navigation.compact .smart-tiles {
+  margin: 2px 0 4px;
+}
+
+/* Account headings come from nyx_ui::sidebar (uppercase, in their section's colour);
+ * their fold button sits at the row's end. */
+.settings-navigation .nav-group-row button.nav-group-add {
+  min-height: 22px;
+  min-width: 22px;
+  padding: 0;
+  margin: 0 4px 2px 0;
+  color: @theme_text_tertiary;
+}
+
+/* The icon rail's mark where an account's lists start: a short bar in its colour. */
+.settings-navigation separator.nav-divider {
+  margin: 8px 14px 6px;
+  min-height: 2px;
+  border-radius: 1px;
+  background: @theme_divider;
+}
+
+.settings-navigation button.nav-item.active {
+  box-shadow: none;
+}
+
+.nav-line {
+  margin: 10px 6px;
+  background: @hairline;
+}
+
+.nav-foot {
+  padding: 6px 4px 0 10px;
+}
+
+.nav-foot .status-readout {
+  color: @theme_text_tertiary;
+  font-size: 0.846em;
+}
+
+.nav-foot .status-icon {
+  -gtk-icon-size: 13px;
+  color: @theme_text_tertiary;
+}
+
+.nav-foot .status-icon.ok { color: @theme_success; }
+.nav-foot .status-icon.warn { color: @theme_warning; }
+
+/* ---------- The page bar and quick add ---------- */
+
+/* 44 px, its contents centred top to bottom. */
+.page-bar {
+  min-height: 44px;
+  padding: 0 10px 0 16px;
+  border-bottom: 1px solid @sheet_line;
+}
+
+window.reminders-window menubutton.order-pick > button {
+  min-height: 26px;
+  padding: 0 8px 0 10px;
+  border-radius: 6px;
+  background: @field;
+  box-shadow: inset 0 0 0 1px @hairline;
+  font-size: 0.923em;
+  font-weight: 400;
+}
+
+window.reminders-window menubutton.order-pick image {
+  -gtk-icon-size: 11px;
+}
+
+.page-title {
+  font-size: 1.154em;
+  font-weight: 600;
+}
+
+.page-sub {
+  color: @theme_text_tertiary;
+}
+
+.page-toggle {
+  font-size: 0.923em;
+}
+
+.quick-row {
+  margin: 12px 16px 6px 16px;
+}
+
+window.reminders-window entry.quick-add {
+  min-height: 36px;
+}
+
+window.reminders-window entry.quick-add image {
+  color: @theme_accent;
+}
+
+window.reminders-window menubutton.quick-dest > button {
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: @field;
+  box-shadow: inset 0 0 0 1px @hairline;
+}
+
+.quick-parse {
+  margin: 0 16px 8px 42px;
+  color: @theme_text_tertiary;
+  font-size: 0.923em;
+}
+
+.quick-word {
+  color: @theme_text_tertiary;
+}
+
+/* ---------- Rows ---------- */
 
 .task-list {
-  padding: 4px 24px 36px 24px;
+  padding: 4px 10px 36px 10px;
+}
+
+.task-group {
+  margin: 14px 8px 4px 8px;
+  font-size: 0.846em;
+  font-weight: 600;
+  color: @theme_text_tertiary;
+}
+
+.task-group.first {
+  margin-top: 6px;
+}
+
+.task-group.overdue {
+  color: @theme_danger;
+}
+
+.task-group-count {
+  font-weight: 500;
 }
 
 .task-row {
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 9px 10px 9px 4px;
+  border-radius: 7px;
 }
 
 .task-row:hover {
@@ -32,103 +222,225 @@
   background: @nav_active;
 }
 
+.prio-bar {
+  min-width: 3px;
+  margin: 2px 0;
+  border-radius: 2px;
+}
+
+.prio-bar.high { background: @theme_danger; }
+.prio-bar.medium { background: @theme_warning; }
+.prio-bar.low { background: @theme_accent; }
+
 .task-title {
-  font-weight: 500;
+  font-weight: 400;
+}
+
+/* Round checkboxes, as reminders are drawn everywhere. */
+checkbutton.task-check check {
+  border-radius: 999px;
+  min-width: 16px;
+  min-height: 16px;
 }
 
 .task-title.done,
 .done {
   text-decoration: line-through;
-  color: @theme_dim_text;
+  color: @theme_text_tertiary;
 }
 
-.task-due {
-  color: @theme_dim_text;
-  font-size: 0.88em;
+.task-line {
+  color: @theme_text_tertiary;
+  font-size: 0.846em;
 }
 
-.task-due.overdue {
+.task-chip {
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: @field;
+  box-shadow: inset 0 0 0 1px @hairline;
+  color: @theme_dim_text;
+  font-weight: 500;
+}
+
+.task-chip image {
+  -gtk-icon-size: 12px;
+}
+
+.task-chip.overdue {
   color: @theme_danger;
-  font-weight: 600;
+  background: alpha(@theme_danger, 0.10);
+  box-shadow: none;
 }
 
-.task-row .dim {
-  font-size: 0.88em;
+.task-chip.accent {
+  color: @theme_accent;
+  background: alpha(@theme_accent, 0.12);
+  box-shadow: none;
+}
+
+.task-chip.plain {
+  background: transparent;
+  box-shadow: none;
+  padding: 0 2px;
 }
 
 .task-tag {
   color: @theme_accent;
-  font-size: 0.88em;
+  font-weight: 500;
 }
 
-.priority-high {
-  color: @theme_danger;
-  font-weight: 700;
-}
-
-.priority-medium {
-  color: @theme_accent;
-  font-weight: 700;
-}
-
-.priority-low {
-  color: @theme_dim_text;
-  font-weight: 700;
+.task-note,
+.task-list-name {
+  color: @theme_text_tertiary;
 }
 
 .flag {
-  color: @theme_accent;
+  color: @theme_warning;
 }
 
-.completed-head {
-  margin: 22px 0 6px 12px;
+/* ---------- Details ---------- */
+
+.detail-side {
+  min-width: 300px;
 }
 
 .detail-panel {
-  padding: 16px;
+  padding: 14px 16px 12px 16px;
 }
 
-.detail-title {
+.detail-top {
+  margin-bottom: 10px;
+}
+
+window.reminders-window entry.detail-title {
   font-weight: 600;
-  font-size: 1.05em;
+  font-size: 1.154em;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding-left: 0;
 }
 
 .detail-notes-box {
   background: @field;
-  border: 1px solid @hairline;
-  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px @hairline;
+  border-radius: 7px;
 }
 
 .detail-notes {
   background: transparent;
-  padding: 6px;
+  padding: 6px 8px;
 }
 
 .detail-heading {
-  font-size: 0.72em;
+  margin: 16px 0 6px 0;
+  font-size: 0.846em;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  color: @theme_text_tertiary;
+}
+
+.detail-count {
+  font-weight: 500;
+}
+
+.detail-card {
+  border-radius: 11px;
+  background: @theme_card;
+  box-shadow: inset 0 0 0 1px @hairline;
+}
+
+.detail-crow {
+  min-height: 38px;
+  padding: 4px 8px 4px 12px;
+  border-bottom: 1px solid @hairline;
+}
+
+.detail-card > .detail-crow:last-child {
+  border-bottom: none;
+}
+
+.detail-crow > image {
   color: @theme_dim_text;
-  margin-top: 10px;
+  -gtk-icon-size: 15px;
 }
 
 .detail-label {
   color: @theme_dim_text;
 }
 
-.detail-row {
-  min-height: 34px;
+window.reminders-window menubutton.detail-pick > button,
+.detail-crow dropdown > button {
+  min-height: 26px;
+  padding: 0 8px 0 10px;
+  border-radius: 6px;
 }
 
-.settings-navigation .nav-group-add {
+window.reminders-window entry.detail-inline {
+  min-height: 26px;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.detail-seg button {
+  padding: 0 6px;
   min-height: 22px;
-  min-width: 22px;
-  padding: 0;
-  margin-right: 4px;
+  font-size: 0.923em;
+}
+
+.detail-subrow {
+  padding: 2px 6px 2px 12px;
+  border-bottom: 1px solid @hairline;
+}
+
+window.reminders-window button.flat.detail-subopen {
+  padding: 4px 6px;
+  color: @theme_text;
+  font-weight: 400;
+}
+
+window.reminders-window entry.detail-subadd {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  min-height: 36px;
+}
+
+window.reminders-window button.flat.detail-link {
+  color: @theme_accent;
+  font-weight: 500;
+  padding: 6px 12px;
+}
+
+.detail-foot {
+  padding: 10px 16px;
+  border-top: 1px solid @sheet_line;
+}
+
+.detail-saved {
+  color: @theme_text_tertiary;
+  font-size: 0.846em;
 }
 
 button.destructive {
   color: @theme_danger;
+}
+
+window.reminders-window button.detail-delete {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 7px;
+  background: @field;
+  box-shadow: inset 0 0 0 1px @hairline;
+  font-weight: 500;
+}
+
+/* ---------- Menus ---------- */
+
+.menu-icon {
+  color: @theme_dim_text;
 }
 
 /* Settings → Task lists: each account's switch, then its lists under it. */
@@ -140,21 +452,7 @@ button.destructive {
   padding-left: 32px;
 }
 
-/* Nyx 2.0: quick add in the header; the sidebar has Find on top and the
-   status at its foot. */
-window.reminders-window .app-header entry.quick-add {
-  min-width: 380px;
-}
-
-.nav-top {
-  padding: 0 0 6px 0;
-}
-
-.nav-foot {
-  padding: 6px 4px 0 8px;
-}
-
-.nav-foot .status-readout {
-  color: @theme_dim_text;
-  font-size: 11.5px;
+.empty-state .empty-title {
+  font-size: 1.154em;
+  font-weight: 600;
 }

@@ -76,6 +76,7 @@ impl Group {
 pub enum MenuEntry {
     Item {
         label: String,
+        icon: Option<&'static str>,
         key: Option<&'static str>,
         danger: bool,
         enabled: bool,
@@ -84,38 +85,58 @@ pub enum MenuEntry {
     /// Opens a page of its own (Move to…, Snooze…), with a way back.
     Sub {
         label: String,
+        icon: Option<&'static str>,
         entries: Vec<MenuEntry>,
     },
     Separator,
 }
 
 pub fn item(label: &str, run: impl Fn() + 'static) -> MenuEntry {
-    MenuEntry::Item { label: label.into(), key: None, danger: false, enabled: true, run: Box::new(run) }
+    MenuEntry::Item { label: label.into(), icon: None, key: None, danger: false, enabled: true, run: Box::new(run) }
 }
 
 /// An item with its keyboard shortcut shown beside it.
 pub fn keyed(label: &str, key: &'static str, run: impl Fn() + 'static) -> MenuEntry {
-    MenuEntry::Item { label: label.into(), key: Some(key), danger: false, enabled: true, run: Box::new(run) }
+    MenuEntry::Item { label: label.into(), icon: None, key: Some(key), danger: false, enabled: true, run: Box::new(run) }
 }
 
 /// An item that deletes or can't be undone, shown in the danger color.
 pub fn danger(label: &str, key: Option<&'static str>, run: impl Fn() + 'static) -> MenuEntry {
-    MenuEntry::Item { label: label.into(), key, danger: true, enabled: true, run: Box::new(run) }
+    MenuEntry::Item { label: label.into(), icon: None, key, danger: true, enabled: true, run: Box::new(run) }
 }
 
 pub fn sub(label: &str, entries: Vec<MenuEntry>) -> MenuEntry {
-    MenuEntry::Sub { label: label.into(), entries }
+    MenuEntry::Sub { label: label.into(), icon: None, entries }
 }
 
 pub fn separator() -> MenuEntry {
     MenuEntry::Separator
 }
 
-fn menu_row(label: &str, end: Option<gtk::Widget>, danger: bool) -> gtk::Button {
+impl MenuEntry {
+    /// The same entry with an icon before its label.
+    pub fn with_icon(mut self, name: &'static str) -> Self {
+        match &mut self {
+            MenuEntry::Item { icon, .. } | MenuEntry::Sub { icon, .. } => *icon = Some(name),
+            MenuEntry::Separator => {}
+        }
+        self
+    }
+}
+
+fn menu_row(label: &str, end: Option<gtk::Widget>, danger: bool, icon: Option<&str>) -> gtk::Button {
     let button = gtk::Button::new();
     button.add_css_class("flat");
     button.add_css_class("menu-item");
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 16);
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    if let Some(name) = icon {
+        let image = gtk::Image::from_icon_name(name);
+        image.add_css_class("menu-icon");
+        if danger {
+            image.add_css_class("danger-text");
+        }
+        row.append(&image);
+    }
     let text = gtk::Label::new(Some(label));
     text.set_xalign(0.0);
     text.set_hexpand(true);
@@ -134,7 +155,7 @@ fn menu_page(popover: &gtk::Popover, pages: &gtk::Stack, entries: Vec<MenuEntry>
     let list = gtk::Box::new(gtk::Orientation::Vertical, 1);
     if let Some(title) = back {
         let icon = gtk::Image::from_icon_name("go-previous-symbolic");
-        let row = menu_row(title, None, false);
+        let row = menu_row(title, None, false, None);
         if let Some(content) = row.child().and_downcast::<gtk::Box>() {
             content.prepend(&icon);
         }
@@ -146,13 +167,13 @@ fn menu_page(popover: &gtk::Popover, pages: &gtk::Stack, entries: Vec<MenuEntry>
     for (i, entry) in entries.into_iter().enumerate() {
         match entry {
             MenuEntry::Separator => list.append(&gtk::Separator::new(gtk::Orientation::Horizontal)),
-            MenuEntry::Item { label, key, danger, enabled, run } => {
+            MenuEntry::Item { label, icon, key, danger, enabled, run } => {
                 let hint = key.map(|k| {
                     let l = gtk::Label::new(Some(k));
                     l.add_css_class("dim");
                     l.upcast::<gtk::Widget>()
                 });
-                let row = menu_row(&label, hint, danger);
+                let row = menu_row(&label, hint, danger, icon);
                 row.set_sensitive(enabled);
                 let p = popover.clone();
                 row.connect_clicked(move |_| {
@@ -161,11 +182,11 @@ fn menu_page(popover: &gtk::Popover, pages: &gtk::Stack, entries: Vec<MenuEntry>
                 });
                 list.append(&row);
             }
-            MenuEntry::Sub { label, entries } => {
+            MenuEntry::Sub { label, icon, entries } => {
                 let name = format!("sub{i}");
                 let page = menu_page(popover, pages, entries, Some(&label));
                 pages.add_named(&page, Some(&name));
-                let row = menu_row(&label, Some(gtk::Image::from_icon_name("go-next-symbolic").upcast()), false);
+                let row = menu_row(&label, Some(gtk::Image::from_icon_name("go-next-symbolic").upcast()), false, icon);
                 let p = pages.clone();
                 row.connect_clicked(move |_| p.set_visible_child_name(&name));
                 list.append(&row);
