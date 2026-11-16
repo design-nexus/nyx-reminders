@@ -76,7 +76,7 @@ fn main() -> glib::ExitCode {
     }
     if std::env::var_os("GSK_RENDERER").is_none() {
         // SAFETY: still single-threaded; nothing else reads the environment yet.
-        unsafe { std::env::set_var("GSK_RENDERER", "ngl") };
+        unsafe { std::env::set_var("GSK_RENDERER", "gl") };
     }
     // D-Bus starts Reminders with --gapplication-service for a call from nyx, Glimpse or
     // Nyx Assistant: no window, no alerts (the running copy or nyx-remindersd has them),
