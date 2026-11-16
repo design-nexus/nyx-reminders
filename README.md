@@ -1,9 +1,3 @@
-> Development branch: Online Accounts now uses the isolated native preview.
-> Runtime EDS/EWS dependencies have been replaced by `nyx-pim` and libical.
-> Existing EDS data is retained and can be explicitly exported/imported with
-> `nyx-pim-migrate`. Provider and migration limitations are tracked in
-> the sibling `nyx-accounts/docs/IMPLEMENTATION.md`; this branch is not merge-ready.
-
 # Reminders
 
 Your task lists from Google Tasks, Microsoft To Do, Nextcloud, compatible CalDAV servers and this
@@ -18,8 +12,10 @@ computer, in one place, for Omarchy. Part of the [Nyx](https://github.com/design
 - Works offline from the saved copy and catches up when you're back online
 - Follows your Omarchy theme; works from the keyboard and tiled at half-screen
 
-Accounts are added in **Settings → Online Accounts**. This feature branch uses
-native authentication and a separate SQLite task store. Provider capabilities vary:
+Syncing with accounts is a preview: lists on this computer are the dependable part.
+Accounts are added in **Settings → Online Accounts**, with an app password for CalDAV
+servers; Google Tasks and Microsoft To Do need an OAuth client you register with them
+yourself. Tasks are kept in a SQLite store on this computer. Provider capabilities vary:
 Google Tasks has date-only deadlines without reminders or recurrence; personal
 Microsoft accounts use Graph To Do. Existing EDS data remains untouched.
 
