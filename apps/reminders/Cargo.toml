@@ -16,12 +16,12 @@ chrono = { version = "0.4", default-features = false, features = ["std", "clock"
 glib = "0.22"
 gtk = { version = "0.11", package = "gtk4", features = ["v4_18"] }
 nyx-accounts = { package = "nyx-accounts-service", git = "https://github.com/design-nexus/nyx-accounts.git", rev = "afdc1482cb910746f942556090870d3ec083dd34" }
-nyx-core = { git = "https://github.com/design-nexus/nyx-core.git", rev = "32f0c5e154fc44c763b8ecd80d35a3b298723afa" }
-nyx-actions = { git = "https://github.com/design-nexus/nyx-core.git", rev = "32f0c5e154fc44c763b8ecd80d35a3b298723afa", default-features = false }
-nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "32f0c5e154fc44c763b8ecd80d35a3b298723afa" }
+nyx-core = { git = "https://github.com/design-nexus/nyx-core.git", rev = "94e0c8aa133074c74adb31365e51f56168114f68" }
+nyx-actions = { git = "https://github.com/design-nexus/nyx-core.git", rev = "94e0c8aa133074c74adb31365e51f56168114f68", default-features = false }
+nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "94e0c8aa133074c74adb31365e51f56168114f68" }
 nyx-reminders-core = { path = "../../crates/nyx-reminders-core" }
-nyx-theme = { git = "https://github.com/design-nexus/nyx-design.git", rev = "4f8e16d6ae3dbc2a14091271e3b6bb29902c0df4" }
-nyx-ui = { git = "https://github.com/design-nexus/nyx-design.git", rev = "4f8e16d6ae3dbc2a14091271e3b6bb29902c0df4" }
-nyx-when = { git = "https://github.com/design-nexus/nyx-core.git", rev = "32f0c5e154fc44c763b8ecd80d35a3b298723afa" }
+nyx-theme = { git = "https://github.com/design-nexus/nyx-design.git", rev = "ea8839d237a23ec83887429475f0780c06a36826" }
+nyx-ui = { git = "https://github.com/design-nexus/nyx-design.git", rev = "ea8839d237a23ec83887429475f0780c06a36826" }
+nyx-when = { git = "https://github.com/design-nexus/nyx-core.git", rev = "94e0c8aa133074c74adb31365e51f56168114f68" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
