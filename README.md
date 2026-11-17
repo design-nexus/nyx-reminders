@@ -1,7 +1,7 @@
 # Reminders
 
 Your task lists from Google Tasks, Microsoft To Do, Nextcloud, compatible CalDAV servers and this
-computer, in one place, for Omarchy. Part of the [Nyx](https://github.com/design-nexus/nyx) apps.
+computer, in one place, for NyxOS and Omarchy. Part of the [Nyx](https://github.com/design-nexus/nyx) apps.
 
 - Today, Scheduled, Flagged, All and Completed across every list
 - Type “Call Sam tomorrow at 9” to add a reminder with its due date
@@ -10,7 +10,7 @@ computer, in one place, for Omarchy. Part of the [Nyx](https://github.com/design
 - Alerts as desktop notifications, with Complete and Snooze
 - A repeating reminder moves to its next date when you complete it
 - Works offline from the saved copy and catches up when you're back online
-- Follows your Omarchy theme; works from the keyboard and tiled at half-screen
+- Follows the desktop theme; works from the keyboard and tiled at half-screen
 
 Syncing with accounts is a preview: lists on this computer are the dependable part.
 Accounts are added in **Settings → Online Accounts**, with an app password for CalDAV
@@ -20,6 +20,8 @@ Google Tasks has date-only deadlines without reminders or recurrence; personal
 Microsoft accounts use Graph To Do. Existing EDS data remains untouched.
 
 ## Install
+
+On NyxOS, install Reminders from the Store or with `nyx install nyx-reminders`. On Omarchy:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/design-nexus/nyx-reminders/main/install.sh | bash
