@@ -17,7 +17,8 @@ Accounts are added in **Settings → Online Accounts**, with an app password for
 servers; Google Tasks and Microsoft To Do need an OAuth client you register with them
 yourself. Tasks are kept in a SQLite store on this computer. Provider capabilities vary:
 Google Tasks has date-only deadlines without reminders or recurrence; personal
-Microsoft accounts use Graph To Do. Existing EDS data remains untouched.
+Microsoft accounts use Graph To Do. On Omarchy, task lists in the older Evolution store
+are left untouched.
 
 ## Install
 

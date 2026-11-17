@@ -1,6 +1,7 @@
 //! Tasks, smart lists and local metadata for Nyx Reminders. No GTK.
 //!
-//! Tasks live in Evolution Data Server task lists (VTODO) through `nyx-eds`.
+//! Tasks live in nyx-pim's SQLite task store (VTODO; the crate is imported as `nyx-eds`,
+//! its older name), synced with the accounts' task lists.
 //! What VTODO can't hold (flagged, manual order, a link back to a Mail message)
 //! is kept in a small sidecar database, keyed by list and task uid.
 
