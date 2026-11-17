@@ -9,5 +9,5 @@ repository.workspace = true
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
-nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "a258c315f056ac649586fdb55e98613056221411" }
+nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "2e7937ebd156a1df7d92457f9a3b35aecfc22ac9" }
 rusqlite = { version = "0.40", features = ["bundled"] }

@@ -17,11 +17,11 @@ chrono = { version = "0.4", default-features = false, features = ["std", "clock"
 gio = "0.22"
 glib = "0.22"
 nyx-core = { git = "https://github.com/design-nexus/nyx-core.git", rev = "a258c315f056ac649586fdb55e98613056221411", default-features = false }
-nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "a258c315f056ac649586fdb55e98613056221411" }
+nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "2e7937ebd156a1df7d92457f9a3b35aecfc22ac9" }
 nyx-reminders-core = { path = "../../crates/nyx-reminders-core" }
 rusqlite = { version = "0.40", features = ["bundled"] }
 
 [dev-dependencies]
 gio = "0.22"
 glib = "0.22"
-nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "a258c315f056ac649586fdb55e98613056221411" }
+nyx-eds = { package = "nyx-pim", git = "https://github.com/design-nexus/nyx-core.git", rev = "2e7937ebd156a1df7d92457f9a3b35aecfc22ac9" }
